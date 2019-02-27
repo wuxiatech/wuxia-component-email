@@ -1,11 +1,14 @@
 package cn.wuxia.component.mail.bean;
 
+import cn.wuxia.common.entity.ValidationEntity;
 import cn.wuxia.common.util.StringUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import java.io.Serializable;
 
-public class EmailBean implements Serializable {
+public class EmailBean extends ValidationEntity implements Serializable {
 
     /**
      * 
@@ -16,14 +19,17 @@ public class EmailBean implements Serializable {
 
     private String mailFrom;
 
+    @NotEmpty
     private String[] mailTo;
 
     private String[] mailCC;
 
     private String[] mailBCC;
 
+    @NotBlank
     private String mailSubject;
 
+    @NotBlank
     private String mailContent;
 
     private String[] attachmentpath;

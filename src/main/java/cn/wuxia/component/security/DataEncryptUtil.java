@@ -42,8 +42,8 @@ public class DataEncryptUtil {
 	}
 	
 	public static void main(String args[]) throws Exception {
-		System.out.println(encryptData("LTAIOt1nfZMGWfCw"));
-		System.out.println(encryptData("FKWUclfXRNprcQqeRXcUXgrd3Ae7Gc"));
+		System.out.println(encryptData("smtp.exmail.qq.com"));
+		System.out.println(encryptData("Fengmi123"));
 		System.out.println(decrypt(encryptData("1234567890")));
 	}
 	
