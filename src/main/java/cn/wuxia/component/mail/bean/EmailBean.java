@@ -1,30 +1,36 @@
 package cn.wuxia.component.mail.bean;
 
 import cn.wuxia.common.entity.ValidationEntity;
+import cn.wuxia.common.util.ArrayUtil;
 import cn.wuxia.common.util.StringUtil;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.util.Assert;
 
 import java.io.Serializable;
 
+@Getter
+@Setter
 public class EmailBean extends ValidationEntity implements Serializable {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
 
     private Integer emailId;
 
-    private String mailFrom;
+    private EmailAddress mailFrom;
 
     @NotEmpty
-    private String[] mailTo;
+    private EmailAddress[] mailTo;
 
-    private String[] mailCC;
+    private EmailAddress[] mailCC;
 
-    private String[] mailBCC;
+    private EmailAddress[] mailBCC;
 
     @NotBlank
     private String mailSubject;
@@ -39,92 +45,28 @@ public class EmailBean extends ValidationEntity implements Serializable {
 
     /**
      * 最简实例
-     * 
+     *
      * @param to
      * @param content
      */
     public EmailBean(String[] to, String content) {
-        this.mailTo = to;
-        this.mailContent = content;
-        this.mailSubject = StringUtils.substring(content, 0, 10);
+        this(to, StringUtils.substring(content, 0, 10), content);
     }
 
     public EmailBean(String[] to, String subject, String content) {
-        this.mailTo = to;
-        this.mailSubject = subject;
-        this.mailContent = content;
+        this(null, to, subject, content);
     }
 
     public EmailBean(String from, String[] to, String subject, String content) {
-        this.mailFrom = from;
-        this.mailTo = to;
+        Assert.notEmpty(to, "收件人不能为空");
         this.mailSubject = subject;
         this.mailContent = content;
+        this.mailFrom = new EmailAddress(from);
+        for (String mail : to) {
+            mailTo = ArrayUtil.add(mailTo, new EmailAddress(mail));
+        }
     }
 
-    public String getMailFrom() {
-        return mailFrom;
-    }
-
-    public void setMailFrom(String mailFrom) {
-        this.mailFrom = mailFrom;
-    }
-
-    public String[] getMailTo() {
-        return mailTo;
-    }
-
-    public void setMailTo(String... mailTo) {
-        this.mailTo = mailTo;
-    }
-
-    public String[] getMailCC() {
-        return mailCC;
-    }
-
-    public void setMailCC(String... mailCC) {
-        this.mailCC = mailCC;
-    }
-
-    public String[] getMailBCC() {
-        return mailBCC;
-    }
-
-    public void setMailBCC(String... mailBCC) {
-        this.mailBCC = mailBCC;
-    }
-
-    public String getMailSubject() {
-        return mailSubject;
-    }
-
-    public void setMailSubject(String mailSubject) {
-        this.mailSubject = mailSubject;
-    }
-
-    public String getMailContent() {
-        return mailContent;
-    }
-
-    public void setMailContent(String mailContent) {
-        this.mailContent = mailContent;
-    }
-
-    public String[] getAttachmentpath() {
-        return attachmentpath;
-    }
-
-    public void setAttachmentpath(String[] attachmentpath) {
-        this.attachmentpath = attachmentpath;
-    }
-
-    public Integer getEmailId() {
-        return emailId;
-    }
-
-    public void setEmailId(Integer emailId) {
-        this.emailId = emailId;
-    }
 
     @Override
     public String toString() {

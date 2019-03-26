@@ -1,9 +1,11 @@
 package cn.wuxia.component.mail.service.impl;
 
 import cn.wuxia.common.exception.ValidateException;
+import cn.wuxia.common.util.ArrayUtil;
 import cn.wuxia.common.util.FreemarkerUtil;
 import cn.wuxia.common.util.PropertiesUtils;
 import cn.wuxia.common.util.StringUtil;
+import cn.wuxia.component.mail.bean.EmailAddress;
 import cn.wuxia.component.mail.bean.EmailBean;
 import cn.wuxia.component.mail.exception.EmailException;
 import cn.wuxia.component.mail.service.EmailService;
@@ -26,12 +28,11 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +66,10 @@ public class EmailServiceImpl implements EmailService {
     private Logger logger = LoggerFactory.getLogger(getClass());
 
     public EmailServiceImpl() {
+    }
+
+    public EmailServiceImpl(EmailSenderSupport javaMailSender) {
+        this.javaMailSender = javaMailSender;
     }
 
     public EmailServiceImpl(EmailSenderSupport javaMailSender, String personalName) {
@@ -115,32 +120,29 @@ public class EmailServiceImpl implements EmailService {
             }
             MimeMessageHelper messageHelper = this.getMessageHelper();
             if (ArrayUtils.isNotEmpty(mail.getMailTo())) {
-                for (String m : mail.getMailTo()) {
-                    if (!m.matches(EMAIL_PATTERN)) {
-                        throw new EmailException("邮箱地址有误:" + m);
-                    }
-                }
-                messageHelper.setTo(mail.getMailTo());
+                messageHelper.setTo(toInternetAddress(mail.getMailTo()));
                 mailTo = StringUtils.join(mail.getMailTo(), ",");
             }
 
             if (ArrayUtils.isNotEmpty(mail.getMailBCC())) {
-                messageHelper.setBcc(mail.getMailBCC());
+                messageHelper.setBcc(toInternetAddress(mail.getMailBCC()));
             }
 
             if (ArrayUtils.isNotEmpty(mail.getMailCC())) {
-                messageHelper.setCc(mail.getMailCC());
+                messageHelper.setCc(toInternetAddress(mail.getMailCC()));
             }
             // 设置自定义发件人昵称
 
-            if (StringUtils.isNotBlank(mail.getMailFrom())) {
-                // messageHelper.setFrom(mail.getMailFrom(),
-                // MimeUtility.encodeText(PERSONAL_NAME));
-                messageHelper.setFrom(mail.getMailFrom(), MimeUtility.encodeText(personalName));
+            if (null != mail.getMailFrom()) {
+                mail.getMailFrom().validate();
+                if (StringUtil.isBlank(mail.getMailFrom().getEmailDisplayName())) {
+                    messageHelper.setFrom(new InternetAddress(mail.getMailFrom().getEmailAddress(), MimeUtility.encodeText(personalName)));
+                } else {
+                    messageHelper.setFrom(new InternetAddress(mail.getMailFrom().getEmailAddress(), MimeUtility.encodeText(mail.getMailFrom().getEmailDisplayName())));
+                }
             } else {
-                // messageHelper.setFrom(javaMailSender.getUsername(),
-                // MimeUtility.encodeText(PERSONAL_NAME));
                 messageHelper.setFrom(javaMailSender.getUsername(), MimeUtility.encodeText(personalName));
+                mail.setMailFrom(new EmailAddress(javaMailSender.getUsername(), personalName));
             }
             messageHelper.setText(mail.getMailContent(), true);
             messageHelper.setSubject(mail.getMailSubject());
@@ -152,14 +154,13 @@ public class EmailServiceImpl implements EmailService {
                 }
             }
 
-            mail.setMailFrom(javaMailSender.getUsername());
 
             logger.info("发送邮件开始---------------");
             javaMailSender.send(messageHelper.getMimeMessage());
             // this.mailTaskService.updateEmailTaskForSendSuccess(mail.getEmailId());
             long endTime = System.currentTimeMillis();
             logger.info("发送邮件成功{}，共花费时间：{}", mail, (endTime - startTime) + "ms");
-        } catch (ValidateException e){
+        } catch (ValidateException e) {
             throw new EmailException("参数有误！", e);
         } catch (Exception e) {
             logger.warn("发送内容：{} ，错误信息： {}", mail, e.getMessage());
@@ -174,9 +175,10 @@ public class EmailServiceImpl implements EmailService {
      * @return
      * @author songlin
      */
+    @Override
     public void sendSimpleMail(EmailBean mailBean) {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(mailBean.getMailTo());
+        mailMessage.setTo(mailBean.getMailTo()[0].getEmailAddress());
         mailMessage.setFrom(javaMailSender.getUsername());
         mailMessage.setText(mailBean.getMailContent());
         mailMessage.setSubject(mailBean.getMailSubject());
@@ -247,6 +249,28 @@ public class EmailServiceImpl implements EmailService {
 //        // 第八步：输出格式化后端内容。
 //        return out.toString();
 //    }
+
+    private InternetAddress[] toInternetAddress(EmailAddress[] emailAddresses) throws UnsupportedEncodingException, AddressException, ValidateException {
+
+        if (ArrayUtils.isNotEmpty(emailAddresses)) {
+            InternetAddress[] internetAddresses = null;
+
+            for (EmailAddress m : emailAddresses) {
+                m.validate();
+                if (!m.getEmailAddress().matches(EMAIL_PATTERN)) {
+                    throw new EmailException("邮箱地址有误:" + m);
+                }
+                if (StringUtil.isNotBlank(m.getEmailDisplayName())) {
+                    internetAddresses = ArrayUtil.add(internetAddresses, new InternetAddress(m.getEmailAddress(), MimeUtility.encodeText(m.getEmailDisplayName())));
+                } else {
+                    internetAddresses = ArrayUtil.add(internetAddresses, new InternetAddress(m.getEmailAddress()));
+                }
+            }
+            return internetAddresses;
+        }
+        return null;
+    }
+
     public EmailSenderSupport getJavaMailSender() {
         return javaMailSender;
     }
