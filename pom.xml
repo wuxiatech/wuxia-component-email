@@ -13,7 +13,7 @@
     <version>2.3.2</version>
     <name>WUXIA Email Component</name>
     <description>WUXIA Email Component Project</description>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <properties>
         <wuxia-common.version>2.3.2</wuxia-common.version>
     </properties>
