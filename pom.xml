@@ -5,17 +5,16 @@
     <parent>
         <groupId>cn.wuxia.parent</groupId>
         <artifactId>parent2019</artifactId>
-        <version>2.3.2</version>
-        <relativePath>../wuxia-parent</relativePath>
+        <version>2.3.3</version>
     </parent>
     <groupId>cn.wuxia.component</groupId>
     <artifactId>wuxia.email-component</artifactId>
-    <version>2.3.2</version>
+    <version>${project.parent.version}</version>
     <name>WUXIA Email Component</name>
     <description>WUXIA Email Component Project</description>
     <packaging>jar</packaging>
     <properties>
-        <wuxia-common.version>2.3.2</wuxia-common.version>
+        <wuxia-common.version>${project.parent.version}</wuxia-common.version>
     </properties>
     <dependencies>
         <dependency>
