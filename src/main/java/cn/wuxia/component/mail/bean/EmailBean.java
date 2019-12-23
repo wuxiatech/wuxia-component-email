@@ -1,6 +1,6 @@
 package cn.wuxia.component.mail.bean;
 
-import cn.wuxia.common.entity.ValidationEntity;
+import cn.wuxia.common.validator.ValidationEntity;
 import cn.wuxia.common.util.ArrayUtil;
 import cn.wuxia.common.util.StringUtil;
 import lombok.Getter;
