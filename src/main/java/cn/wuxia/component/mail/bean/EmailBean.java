@@ -6,7 +6,7 @@ import cn.wuxia.common.util.StringUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.constraints.NotBlank;
+import javax.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.util.Assert;
 
